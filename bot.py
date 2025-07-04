@@ -67,7 +67,10 @@ async def iniciar_bot():
     print("🤖 Bot activo. Escuchando comandos...")
     await app.run_polling()
 
-# --- Ejecutar Flask + Bot en paralelo ---
+# --- Ejecutar Flask + Bot en paralelo (sin usar asyncio.run) ---
 if __name__ == "__main__":
     Thread(target=iniciar_flask).start()
-    asyncio.run(iniciar_bot())
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(iniciar_bot())
+    loop.run_forever()
