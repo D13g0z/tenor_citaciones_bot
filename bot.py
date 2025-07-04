@@ -46,12 +46,30 @@ async def ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def estado(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("✅ El bot está operativo y funcionando correctamente.")
 
+# --- Nuevo comando /debug ---
+async def debug(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        if update.message:
+            user = update.message.from_user
+            chat = update.message.chat
+            text = update.message.text
+
+            print("📥 Nuevo update recibido:")
+            print(f"👤 Usuario: {user.full_name} (ID: {user.id})")
+            print(f"💬 Mensaje: {text}")
+            print(f"👥 Chat ID: {chat.id} | Tipo: {chat.type}")
+
+            await update.message.reply_text("🛠️ Debug recibido. Revisa los logs de Render.")
+    except Exception as e:
+        logging.error(f"Error en /debug: {e}")
+
 # --- Registrar handlers ---
 for cmd in todos_los_comandos:
     application.add_handler(CommandHandler(cmd, responder))
 
 application.add_handler(CommandHandler("ayuda", ayuda))
 application.add_handler(CommandHandler("estado", estado))
+application.add_handler(CommandHandler("debug", debug))  # ← agregado
 
 # --- Flask para recibir webhooks ---
 flask_app = Flask(__name__)
@@ -81,9 +99,7 @@ def health():
     return "OK", 200
 
 # --- Configurar webhook en Telegram ---
-
 if RENDER_URL:
-    import asyncio
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(
@@ -92,4 +108,4 @@ if RENDER_URL:
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-flask_app.run(host="0.0.0.0", port=port)
+    flask_app.run(host="0.0.0.0", port=port)
