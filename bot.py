@@ -73,10 +73,9 @@ async def webhook():
 def health():
     return "OK", 200
 
-@flask_app.before_first_request
-def configurar_webhook():
-    if RENDER_URL:
-        application.bot.set_webhook(url=f"{RENDER_URL}{WEBHOOK_PATH}")
-
+# --- Configurar webhook en Telegram ---
+if RENDER_URL:
+    application.bot.set_webhook(url=f"{RENDER_URL}{WEBHOOK_PATH}")
+    
 if __name__ == "__main__":
     flask_app.run(host="0.0.0.0", port=10000)
