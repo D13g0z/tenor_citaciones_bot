@@ -59,12 +59,14 @@ WEBHOOK_SECRET = "webhookseguro"
 WEBHOOK_PATH = f"/{WEBHOOK_SECRET}"
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL")
 
+import asyncio
+
 @flask_app.route(WEBHOOK_PATH, methods=["POST"])
-async def webhook():
+def webhook():
     try:
         data = request.get_json(force=True)
         update = Update.de_json(data, application.bot)
-        await application.process_update(update)
+        asyncio.run(application.process_update(update))
     except Exception as e:
         logging.error(f"Error en webhook: {e}")
     return "OK", 200
