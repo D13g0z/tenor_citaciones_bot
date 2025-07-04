@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, request
+import asyncio
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from telegram.constants import ParseMode
@@ -17,7 +17,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# --- Comandos ---
+# --- Comandos disponibles ---
 todos_los_comandos = {**respuestas_legales, **respuestas_medioambiente}
 
 # --- Crear aplicación Telegram ---
@@ -46,7 +46,6 @@ async def ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def estado(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("✅ El bot está operativo y funcionando correctamente.")
 
-# --- Nuevo comando /debug ---
 async def debug(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if update.message:
@@ -54,12 +53,12 @@ async def debug(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat = update.message.chat
             text = update.message.text
 
-            print("📥 Nuevo update recibido:")
-            print(f"👤 Usuario: {user.full_name} (ID: {user.id})")
-            print(f"💬 Mensaje: {text}")
-            print(f"👥 Chat ID: {chat.id} | Tipo: {chat.type}")
+            print("📥 Nuevo update recibido:", flush=True)
+            print(f"👤 Usuario: {user.full_name} (ID: {user.id})", flush=True)
+            print(f"💬 Mensaje: {text}", flush=True)
+            print(f"👥 Chat ID: {chat.id} | Tipo: {chat.type}", flush=True)
 
-            await update.message.reply_text("🛠️ Debug recibido. Revisa los logs de Render.")
+            await update.message.reply_text("🛠️ Debug recibido. Revisa la consola.")
     except Exception as e:
         logging.error(f"Error en /debug: {e}")
 
@@ -69,52 +68,9 @@ for cmd in todos_los_comandos:
 
 application.add_handler(CommandHandler("ayuda", ayuda))
 application.add_handler(CommandHandler("estado", estado))
-application.add_handler(CommandHandler("debug", debug))  # ← agregado
+application.add_handler(CommandHandler("debug", debug))
 
-# --- Flask para recibir webhooks ---
-flask_app = Flask(__name__)
-WEBHOOK_SECRET = "webhookseguro"
-WEBHOOK_PATH = f"/{WEBHOOK_SECRET}"
-RENDER_URL = os.getenv("RENDER_EXTERNAL_URL")
-
-import asyncio
-
-@flask_app.route(WEBHOOK_PATH, methods=["POST"])
-def webhook():
-    try:
-        data = request.get_json(force=True)
-        print("📥 Payload recibido:")
-        print(data)
-
-        if not application.bot:
-            print("❌ application.bot no está inicializado")
-            raise RuntimeError("application.bot no está disponible")
-
-        async def handle():
-            try:
-                update = Update.de_json(data, application.bot)
-                print("✅ Update deserializado correctamente")
-                await application.process_update(update)
-                print("✅ Update procesado correctamente")
-            except Exception as inner_e:
-                print(f"❌ Error interno en handle(): {inner_e}")
-                logging.error(f"Error interno en handle(): {inner_e}")
-
-        asyncio.run(handle())
-
-    except Exception as e:
-        print(f"❌ Error general en webhook: {e}")
-        logging.error(f"Error general en webhook: {e}")
-    return "OK", 200
-
-# --- Configurar webhook en Telegram ---
-if RENDER_URL:
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(
-        application.bot.set_webhook(url=f"{RENDER_URL}{WEBHOOK_PATH}")
-    )
-
+# --- Ejecución por consola ---
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    flask_app.run(host="0.0.0.0", port=port)
+    print("🚀 Iniciando bot...", flush=True)
+    asyncio.run(application.run_polling())
