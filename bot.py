@@ -84,14 +84,19 @@ def webhook():
     try:
         data = request.get_json(force=True)
 
+        print("📥 Payload recibido:")
+        print(data)
+
         async def handle():
             update = Update.de_json(data, application.bot)
+            print("✅ Update deserializado correctamente")
             await application.process_update(update)
 
         asyncio.run(handle())
 
     except Exception as e:
-        logging.error(f"Error en webhook: {e}")
+        logging.error(f"❌ Error en webhook: {e}")
+        print(f"❌ Error en webhook: {e}")
     return "OK", 200
 
 @flask_app.route("/health")
