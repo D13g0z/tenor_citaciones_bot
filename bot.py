@@ -83,24 +83,28 @@ import asyncio
 def webhook():
     try:
         data = request.get_json(force=True)
-
         print("📥 Payload recibido:")
         print(data)
 
+        if not application.bot:
+            print("❌ application.bot no está inicializado")
+            raise RuntimeError("application.bot no está disponible")
+
         async def handle():
-            update = Update.de_json(data, application.bot)
-            print("✅ Update deserializado correctamente")
-            await application.process_update(update)
+            try:
+                update = Update.de_json(data, application.bot)
+                print("✅ Update deserializado correctamente")
+                await application.process_update(update)
+                print("✅ Update procesado correctamente")
+            except Exception as inner_e:
+                print(f"❌ Error interno en handle(): {inner_e}")
+                logging.error(f"Error interno en handle(): {inner_e}")
 
         asyncio.run(handle())
 
     except Exception as e:
-        logging.error(f"❌ Error en webhook: {e}")
-        print(f"❌ Error en webhook: {e}")
-    return "OK", 200
-
-@flask_app.route("/health")
-def health():
+        print(f"❌ Error general en webhook: {e}")
+        logging.error(f"Error general en webhook: {e}")
     return "OK", 200
 
 # --- Configurar webhook en Telegram ---
