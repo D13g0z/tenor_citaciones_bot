@@ -1,8 +1,15 @@
 import os
 import logging
 import asyncio
+from datetime import datetime
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters
+)
 from telegram.constants import ParseMode
 
 from config import TOKEN
@@ -16,6 +23,10 @@ logging.basicConfig(
     level=logging.ERROR,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
+# --- Metadatos del bot ---
+BOT_VERSION = "1.0.0"
+FECHA_ULTIMA_ACTUALIZACION = "2025-07-06"
 
 # --- Comandos disponibles ---
 todos_los_comandos = {**respuestas_legales, **respuestas_medioambiente}
@@ -35,6 +46,15 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
         logging.error(f"Error en responder: {e}")
+
+async def comando_no_reconocido(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        if update.message and update.message.chat.type in ["group", "supergroup"]:
+            await update.message.reply_text(
+                "⚠️ Comando no reconocido. Escribe /ayuda para ver los disponibles."
+            )
+    except Exception as e:
+        logging.error(f"Error en comando_no_reconocido: {e}")
 
 async def ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -62,6 +82,20 @@ async def debug(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en /debug: {e}")
 
+async def version(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        total = len(todos_los_comandos)
+        mensaje = (
+            f"🤖 *Tenor Citaciones Bot*\n"
+            f"📦 *Versión:* {BOT_VERSION}\n"
+            f"📅 *Actualización:* {FECHA_ULTIMA_ACTUALIZACION}\n"
+            f"🔢 *Comandos activos:* {total}\n"
+            f"👤 *Autor:* Diego Zúñiga"
+        )
+        await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
+    except Exception as e:
+        logging.error(f"Error en /version: {e}")
+
 # --- Registrar handlers ---
 for cmd in todos_los_comandos:
     application.add_handler(CommandHandler(cmd, responder))
@@ -69,6 +103,10 @@ for cmd in todos_los_comandos:
 application.add_handler(CommandHandler("ayuda", ayuda))
 application.add_handler(CommandHandler("estado", estado))
 application.add_handler(CommandHandler("debug", debug))
+application.add_handler(CommandHandler("version", version))
+
+# 🧱 Fallback para comandos no reconocidos
+application.add_handler(MessageHandler(filters.COMMAND, comando_no_reconocido))
 
 # --- Ejecución por consola ---
 if __name__ == "__main__":
