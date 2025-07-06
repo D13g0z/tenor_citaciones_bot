@@ -97,13 +97,14 @@ async def version(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en /version: {e}")
 
-# ✅ NUEVO: Comando /def
+#Mostrar definiciones
+
 async def mostrar_definiciones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         lista = "\n".join([f"/def_{k}" for k in sorted(definiciones)])
         mensaje = (
-            "📘 *Diccionario de Términos*\n"
-            "Escribe uno de estos comandos para ver su definición:\n\n"
+            "📘 *Diccionario de Términos Legales*\n\n"
+            "Escribe alguno de estos comandos para ver su definición completa:\n\n"
             f"{lista}"
         )
         await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
