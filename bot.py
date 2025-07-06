@@ -16,6 +16,7 @@ from config import TOKEN
 from respuestas import respuestas_legales
 from respuestas_medioambiente import respuestas_medioambiente
 from ayuda import generar_mensaje_ayuda
+from definiciones import definiciones  # ✅ NUEVO
 
 # --- Logging ---
 logging.basicConfig(
@@ -96,6 +97,29 @@ async def version(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en /version: {e}")
 
+# ✅ NUEVO: Comando /def
+async def mostrar_definiciones(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        lista = "\n".join([f"/def_{k}" for k in sorted(definiciones)])
+        mensaje = (
+            "📘 *Diccionario de Términos*\n"
+            "Escribe uno de estos comandos para ver su definición:\n\n"
+            f"{lista}"
+        )
+        await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
+    except Exception as e:
+        logging.error(f"Error en /def: {e}")
+
+# ✅ NUEVO: Generar handlers dinámicos para definiciones
+def crear_handler_definicion(termino, definicion):
+    async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        try:
+            mensaje = f"📌 *{termino.replace('_', ' ').capitalize()}*\n{definicion}"
+            await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
+        except Exception as e:
+            logging.error(f"Error en definición {termino}: {e}")
+    return handler
+
 # --- Registrar handlers ---
 for cmd in todos_los_comandos:
     application.add_handler(CommandHandler(cmd, responder))
@@ -104,6 +128,11 @@ application.add_handler(CommandHandler("ayuda", ayuda))
 application.add_handler(CommandHandler("estado", estado))
 application.add_handler(CommandHandler("debug", debug))
 application.add_handler(CommandHandler("version", version))
+application.add_handler(CommandHandler("def", mostrar_definiciones))
+
+for termino, definicion in definiciones.items():
+    comando = f"def_{termino}"
+    application.add_handler(CommandHandler(comando, crear_handler_definicion(termino, definicion)))
 
 # 🧱 Fallback para comandos no reconocidos
 application.add_handler(MessageHandler(filters.COMMAND, comando_no_reconocido))
