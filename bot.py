@@ -16,7 +16,6 @@ from config import TOKEN
 from respuestas import respuestas_legales
 from respuestas_medioambiente import respuestas_medioambiente
 from ayuda import generar_mensaje_ayuda
-from definiciones import definiciones  # ✅ Diccionario de definiciones legales
 
 # --- Logging ---
 logging.basicConfig(
@@ -97,34 +96,7 @@ async def version(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en /version: {e}")
 
-async def mostrar_definiciones(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        if update.message.chat.type not in ["group", "supergroup"]:
-            return
-        comandos = sorted([f"/def_{k}" for k in definiciones.keys()])
-        lista = "\n".join(comandos)
-        mensaje = (
-            "📘 *Diccionario de Términos Legales*\n\n"
-            "Estos son los comandos disponibles para consultar definiciones:\n\n"
-            f"{lista}\n\n"
-            "✏️ Escribí uno de ellos para ver su definición completa."
-        )
-        await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
-    except Exception as e:
-        logging.error(f"Error en /def: {e}")
-
-# ✅ Generar handlers dinámicos para definiciones
-def crear_handler_definicion(termino, definicion):
-    async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        try:
-            mensaje = f"📌 *{termino.replace('_', ' ').capitalize()}*\n{definicion}"
-            await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
-        except Exception as e:
-            logging.error(f"Error en definición {termino}: {e}")
-    return handler
-
 # --- Registrar handlers ---
-application.add_handler(CommandHandler("def", mostrar_definiciones))
 application.add_handler(CommandHandler("ayuda", ayuda))
 application.add_handler(CommandHandler("estado", estado))
 application.add_handler(CommandHandler("debug", debug))
@@ -132,13 +104,6 @@ application.add_handler(CommandHandler("version", version))
 
 for cmd in todos_los_comandos:
     application.add_handler(CommandHandler(cmd, responder))
-
-for termino, definicion in definiciones.items():
-    comando = f"def_{termino}"
-    if len(comando) <= 32:  # Telegram command limit
-        application.add_handler(CommandHandler(comando, crear_handler_definicion(termino, definicion)))
-    else:
-        logging.warning(f"⚠️ Comando demasiado largo y no registrado: {comando}")
 
 application.add_handler(MessageHandler(filters.COMMAND, comando_no_reconocido))
 
