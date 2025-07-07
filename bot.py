@@ -1,6 +1,7 @@
 import os
 import logging
 import asyncio
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from datetime import datetime
 from telegram import Update
 from telegram.ext import (
@@ -95,12 +96,34 @@ async def version(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
         logging.error(f"Error en /version: {e}")
+        
+async def leyes(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        if update.message.chat.type not in ["group", "supergroup"]:
+            return
+
+        teclado = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("🚦 Ley de Tránsito", url="https://www.bcn.cl/leychile/navegar?idNorma=200109"),
+                InlineKeyboardButton("🍷 Ley de Alcoholes", url="https://www.bcn.cl/leychile/navegar?idNorma=30685"),
+            ],
+            [
+                InlineKeyboardButton("🌱 Ley del Medioambiente", url="https://www.bcn.cl/leychile/navegar?idNorma=30667"),
+                InlineKeyboardButton("📘 Reglamento CONASET", url="https://www.conaset.cl/legislacion-y-normativa/"),
+            ]
+        ])
+
+        mensaje = "📚 *Acceso directo a las leyes referenciadas por el bot:*"
+        await update.message.reply_text(mensaje, reply_markup=teclado, parse_mode=ParseMode.MARKDOWN)
+    except Exception as e:
+        logging.error(f"Error en /leyes: {e}")
 
 # --- Registrar handlers ---
 application.add_handler(CommandHandler("ayuda", ayuda))
 application.add_handler(CommandHandler("estado", estado))
 application.add_handler(CommandHandler("debug", debug))
 application.add_handler(CommandHandler("version", version))
+application.add_handler(CommandHandler("leyes", leyes))
 
 for cmd in todos_los_comandos:
     application.add_handler(CommandHandler(cmd, responder))
