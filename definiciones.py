@@ -16,7 +16,7 @@ definiciones = {
     "cuneta": "En calles, ángulo entre calzada y acera; en caminos, foso lateral de poca profundidad.",
     "chasis": "Armazón del vehículo, excluye carrocería y accesorios para conductor, pasajeros o carga.",
     "demarcacion": "Símbolo, palabra o marca sobre la calzada que guía el tránsito de vehículos y peatones.",
-    "derecho_preferente_de_paso": "Prerrogativa de un peatón o conductor para proseguir su marcha.",
+    "derecho_preferente": "Prerrogativa de un peatón o conductor para proseguir su marcha.",
     "detencion": "Paralización breve por señales o para dejar/pickear pasajeros, mientras dure la maniobra.",
     "eje_de_calzada": "Línea longitudinal real o imaginaria que divide la calzada en sentidos opuestos.",
     "esquina": "El vértice del ángulo que forman las líneas de edificación o deslinde convergentes, según sea el caso.",
@@ -26,11 +26,11 @@ definiciones = {
     "homologacion": "Certificación de que un modelo de vehículo cumple las normas técnicas vigentes del Ministerio de Transportes y Telecomunicaciones.",
     "interseccion": "Área común de calzadas que se cruzan o convergen.",
     "licencia_de_conductor": "Documento otorgado por la autoridad que habilita a conducir vehículos motorizados o de tracción animal.",
-    "linea_de_detencion_de_veh": (
+    "linea_de_detencion": (
         "Línea transversal a la calzada antes de una intersección o paso peatonal. "
         "En cruces regulados: a no menos de 1 metro. En otros cruces: justo antes del cruce."
     ),
-    "linea_detencion_ad": "Línea demarcada antes de un cruce regulado que determina la zona de espera de ciclos o motocicletas.",
+    "linea_detencion": "Línea demarcada antes de un cruce regulado que determina la zona de espera de ciclos o motocicletas.",
     "linea_de_edificacion": "Deslinde entre la propiedad y la acera.",
     "locomocion_colectiva": "Servicio remunerado de transporte público de personas.",
     "luz_baja": "Luz que permite ver obstáculos a 50 metros. Haz luminoso paralelo a la calzada.",
@@ -50,14 +50,14 @@ definiciones = {
     "vehiculo": (
         "Medio de transporte motorizado o no. No incluye ayudas técnicas como sillas de ruedas o coches de bebé."
     ),
-    "vehiculo_de_emergencia": "Pertenece a instituciones autorizadas como Carabineros, Bomberos o ambulancias fiscales.",
-    "vehiculo_de_locomocion": "Vehículo público para transporte de personas, excluyendo taxis no colectivos.",
+    "vehiculo_emergencia": "Pertenece a instituciones autorizadas como Carabineros, Bomberos o ambulancias fiscales.",
+    "vehiculo_locomocion": "Vehículo público para transporte de personas, excluyendo taxis no colectivos.",
     "vehiculo_escolar": "Vehículo diseñado para transportar más de siete escolares desde/hacia el colegio.",
     "vehiculo_tranvia": "Vehículo urbano de pasajeros que circula exclusivamente sobre rieles.",
     "via": "Calle, camino u otro lugar destinado al tránsito.",
-    "via_de_transito_restringido": "Vía donde solo se puede acceder bajo condiciones específicas definidas por la autoridad.",
-    "zona_de_espera_especial": "Área demarcada para que ciclos o motos inicien la marcha antes que otros vehículos.",
-    "zona_de_transito_calmado": (
+    "transito_restringido": "Vía donde solo se puede acceder bajo condiciones específicas definidas por la autoridad.",
+    "zona_espera_especial": "Área demarcada para que ciclos o motos inicien la marcha antes que otros vehículos.",
+    "transito_calmado": (
         "Áreas urbanas donde se reduce la velocidad máxima a 40, 30 o 20 km/h mediante diseño vial."
     ),
     "via_exclusiva": "Calzada señalizada de uso exclusivo para ciertos vehículos.",
