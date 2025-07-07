@@ -16,7 +16,7 @@ from config import TOKEN
 from respuestas import respuestas_legales
 from respuestas_medioambiente import respuestas_medioambiente
 from ayuda import generar_mensaje_ayuda
-from definiciones import definiciones  # ✅ NUEVO
+from definiciones import definiciones  # ✅ Diccionario de definiciones legales
 
 # --- Logging ---
 logging.basicConfig(
@@ -29,7 +29,7 @@ logging.basicConfig(
 BOT_VERSION = "1.0.0"
 FECHA_ULTIMA_ACTUALIZACION = "2025-07-06"
 
-# --- Comandos disponibles ---
+# --- Comandos base ---
 todos_los_comandos = {**respuestas_legales, **respuestas_medioambiente}
 
 # --- Crear aplicación Telegram ---
@@ -113,7 +113,7 @@ async def mostrar_definiciones(update: Update, context: ContextTypes.DEFAULT_TYP
     except Exception as e:
         logging.error(f"Error en /def: {e}")
 
-# ✅ NUEVO: Generar handlers dinámicos para definiciones
+# ✅ Generar handlers dinámicos para definiciones
 def crear_handler_definicion(termino, definicion):
     async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
@@ -123,26 +123,24 @@ def crear_handler_definicion(termino, definicion):
             logging.error(f"Error en definición {termino}: {e}")
     return handler
 
-# --- Registrar handlers (actualizado) ---
-
-# 1. Comando /def primero (para que no lo capture otro)
+# --- Registrar handlers ---
 application.add_handler(CommandHandler("def", mostrar_definiciones))
-
-# 2. Comandos estáticos
 application.add_handler(CommandHandler("ayuda", ayuda))
 application.add_handler(CommandHandler("estado", estado))
 application.add_handler(CommandHandler("debug", debug))
 application.add_handler(CommandHandler("version", version))
 
-# 3. Comandos legales y medioambientales
 for cmd in todos_los_comandos:
     application.add_handler(CommandHandler(cmd, responder))
 
-# ❌ 4. Eliminado: ya no se registran comandos tipo def_contrato
+for termino, definicion in definiciones.items():
+    comando = f"def_{termino}"
+    if len(comando) <= 32:  # Telegram command limit
+        application.add_handler(CommandHandler(comando, crear_handler_definicion(termino, definicion)))
+    else:
+        logging.warning(f"⚠️ Comando demasiado largo y no registrado: {comando}")
 
-# 5. Fallback
 application.add_handler(MessageHandler(filters.COMMAND, comando_no_reconocido))
-
 
 # --- Ejecución por consola ---
 if __name__ == "__main__":
