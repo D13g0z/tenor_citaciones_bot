@@ -97,18 +97,17 @@ async def version(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en /version: {e}")
 
-#Mostrar definiciones
-
 async def mostrar_definiciones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if update.message.chat.type not in ["group", "supergroup"]:
             return
-        lista = "\n".join([f"/def_{k}" for k in sorted(definiciones)])
+        comandos = sorted([f"/def_{k}" for k in definiciones.keys()])
+        lista = "\n".join(comandos)
         mensaje = (
             "📘 *Diccionario de Términos Legales*\n\n"
-            "Estos son los comandos disponibles:\n\n"
+            "Estos son los comandos disponibles para consultar definiciones:\n\n"
             f"{lista}\n\n"
-            "✏️ Escribí uno de ellos para ver su definición."
+            "✏️ Escribí uno de ellos para ver su definición completa."
         )
         await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
@@ -124,9 +123,9 @@ def crear_handler_definicion(termino, definicion):
             logging.error(f"Error en definición {termino}: {e}")
     return handler
 
-# --- Registrar handlers ---
+# --- Registrar handlers (actualizado) ---
 
-# 1. Comando /def primero (para evitar que sea atrapado por otro handler)
+# 1. Comando /def primero (para que no lo capture otro)
 application.add_handler(CommandHandler("def", mostrar_definiciones))
 
 # 2. Comandos estáticos
@@ -139,16 +138,11 @@ application.add_handler(CommandHandler("version", version))
 for cmd in todos_los_comandos:
     application.add_handler(CommandHandler(cmd, responder))
 
-# 4. Comandos dinámicos de definiciones
-for termino, definicion in definiciones.items():
-    comando = f"def_{termino}"
-    application.add_handler(CommandHandler(comando, crear_handler_definicion(termino, definicion)))
+# ❌ 4. Eliminado: ya no se registran comandos tipo def_contrato
 
 # 5. Fallback
 application.add_handler(MessageHandler(filters.COMMAND, comando_no_reconocido))
 
-# 🧱 Fallback para comandos no reconocidos
-application.add_handler(MessageHandler(filters.COMMAND, comando_no_reconocido))
 
 # --- Ejecución por consola ---
 if __name__ == "__main__":
