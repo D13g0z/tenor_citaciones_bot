@@ -22,12 +22,12 @@ from definiciones import definiciones
 
 
 # --- Logging ---
+
 logging.basicConfig(
     filename="errores.log",
     level=logging.ERROR,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
-
 # --- Metadatos del bot ---
 BOT_VERSION = "1.0.0"
 FECHA_ULTIMA_ACTUALIZACION = "2025-07-06"
@@ -67,7 +67,7 @@ async def ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en ayuda: {e}")
 
-#Head Estado 
+#HEADLER ESTADO
 
 async def estado(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -110,7 +110,7 @@ async def version(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en /version: {e}")
 
-#head LEYES        
+#HEARDLER LEYES        
 
 async def leyes(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -176,23 +176,7 @@ async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await query.message.reply_text("❓ Opción no reconocida.")
 
-#HEADLER DEFINICIONES 
-
-async def mostrar_definiciones(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        if update.message.chat.type not in ["group", "supergroup"]:
-            return
-        comandos = sorted([f"/def_{k}" for k in definiciones.keys()])
-        lista = "\n".join(comandos)
-        mensaje = (
-            "📘 *Diccionario de Definiciones Legales Art: 2 ley de transito*\n\n"
-            "Estos son los comandos disponibles para consultar términos legales:\n\n"
-            f"{lista}\n\n"
-            "✏️ Escribe uno de ellos para ver su definición."
-        )
-        await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
-    except Exception as e:
-        logging.error(f"Error en /def: {e}")
+#HEADLER AUXILIAR DEFINICIONES 
 
 def crear_handler_definicion(termino, definicion):
     async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -201,7 +185,7 @@ def crear_handler_definicion(termino, definicion):
             await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
         except Exception as e:
             logging.error(f"Error en definición {termino}: {e}")
-    return handler        
+    return handler
 
 
 # --- Registrar handlers ---
@@ -214,13 +198,14 @@ application.add_handler(CommandHandler("leyes", leyes))
 application.add_handler(CommandHandler("menu", menu))
 application.add_handler(CallbackQueryHandler(manejar_botones))
 
-# /def muestra la lista de definiciones disponibles
-application.add_handler(CommandHandler("def", mostrar_definiciones))
-
 # Cargar dinámicamente cada comando /def_<término>
+
 for termino, definicion in definiciones.items():
     comando = f"def_{termino}"
-    if len(comando) <= 32:  # Telegram command limit
+    if len(comando) <= 32:  
+        
+        # Telegram command limit
+
         application.add_handler(CommandHandler(comando, crear_handler_definicion(termino, definicion)))
     else:
         logging.warning(f"⚠️ Comando demasiado largo y no registrado: {comando}")
@@ -231,6 +216,7 @@ for cmd in todos_los_comandos:
 application.add_handler(MessageHandler(filters.COMMAND, comando_no_reconocido))
 
 # --- Ejecución por consola ---
+
 if __name__ == "__main__":
     print("🚀 Iniciando bot...", flush=True)
     asyncio.run(application.run_polling()) 
