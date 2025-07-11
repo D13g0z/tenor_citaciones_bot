@@ -182,11 +182,19 @@ async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     opcion = query.data
 
     if opcion == "ver_leyes":
-        await leyes(update, context)  # Usa el handler que ya tenés
+        await leyes(update, context)
     elif opcion == "ver_comandos":
         await query.message.reply_text("📦 Escribe /ayuda o /version para ver los comandos disponibles.")
     elif opcion == "ver_estado":
         await estado(update, context)
+    elif opcion.startswith("def:"):
+        termino = opcion.split("def:")[1]
+        definicion = definiciones.get(termino)
+        if definicion:
+            mensaje = f"📌 *{termino.replace('_', ' ').capitalize()}*\n{definicion}"
+            await query.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
+        else:
+            await query.message.reply_text("⚠️ No se encontró esa definición.")
     else:
         await query.message.reply_text("❓ Opción no reconocida.")
 
@@ -203,6 +211,8 @@ def crear_handler_definicion(termino, definicion):
 
 #HEADLER COMANDO BUSCAR
 
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 async def buscar_definicion(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if not context.args:
@@ -210,34 +220,30 @@ async def buscar_definicion(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         consulta = " ".join(context.args).lower()
-
-        # ✅ Búsqueda directa dentro del diccionario
         sugerencias = []
+
         for termino in definiciones:
             if consulta in termino or consulta in definiciones[termino].lower():
                 sugerencias.append(termino)
 
-        # ✅ Coincidencias aproximadas (fuzzy matching)
         if not sugerencias:
             aproximadas = difflib.get_close_matches(consulta, definiciones.keys(), n=5, cutoff=0.6)
             sugerencias.extend(aproximadas)
 
-        # 📦 Construir respuesta
         if sugerencias:
-            mensaje = "*🔎 Resultados encontrados:*\n\n"
+            botones = []
             for s in sugerencias:
-                comando = f"/def_{s}"
                 nombre = s.replace("_", " ").capitalize()
-                mensaje += f"📘 `{comando}` → *{nombre}*\n"
-        else:
-            mensaje = "⚠️ No se encontró ningún término relacionado."
+                botones.append([InlineKeyboardButton(nombre, callback_data=f"def:{s}")])
 
-        await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
+            teclado = InlineKeyboardMarkup(botones)
+            await update.message.reply_text("🔎 *Resultados encontrados:*", reply_markup=teclado, parse_mode=ParseMode.MARKDOWN)
+        else:
+            await update.message.reply_text("⚠️ No se encontró ningún término relacionado.", parse_mode=ParseMode.MARKDOWN)
 
     except Exception as e:
         logging.error(f"Error en /buscar: {e}")
         await update.message.reply_text("❌ Hubo un error al buscar la definición.")
-
 
 # --- Registrar handlers ---
 
