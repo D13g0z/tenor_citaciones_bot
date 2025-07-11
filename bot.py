@@ -117,11 +117,12 @@ async def leyes(update: Update, context: ContextTypes.DEFAULT_TYPE):
         mensaje = "📚 *Acceso directo a las leyes referenciadas por el bot:*"
         teclado = InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("🚦 Ley de Tránsito", url="https://www.bcn.cl/leychile/navegar?idNorma=200109"),
-                InlineKeyboardButton("🍷 Ley de Alcoholes", url="https://www.bcn.cl/leychile/navegar?idNorma=30685"),
+                InlineKeyboardButton("🚦 Ley de Tránsito", url="https://www.bcn.cl/leychile/navegar?idNorma=1007469"),
+                InlineKeyboardButton("🍷 Ley de Alcoholes", url="https://www.bcn.cl/leychile/navegar?idNorma=1163383"),
             ],
             [
-                InlineKeyboardButton("🌱 Ley del Medioambiente", url="https://www.bcn.cl/leychile/navegar?idNorma=30667"),
+                InlineKeyboardButton("🌱 Ordenanza Medioambiente", url="https://www.bcn.cl/leychile/navegar?idNorma=1209493"),
+                InlineKeyboardButton("🐶 Ordenanza Tenencia responsable", url="https://www.bcn.cl/leychile/navegar?i=265348"),
             ]
         ])
 
