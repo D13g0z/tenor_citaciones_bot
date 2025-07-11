@@ -188,6 +188,36 @@ def crear_handler_definicion(termino, definicion):
             logging.error(f"Error en definición {termino}: {e}")
     return handler
 
+#HEADLER COMANDO BUSCAR
+
+async def buscar_definicion(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        if not context.args:
+            await update.message.reply_text("🔍 Debes escribir una palabra. Ejemplo:\n`/buscar acera`", parse_mode=ParseMode.MARKDOWN)
+            return
+
+        consulta = " ".join(context.args).lower()
+        sugerencias = []
+
+        for termino in definiciones:
+            if consulta in termino or consulta in definiciones[termino].lower():
+                sugerencias.append(termino)
+
+        if sugerencias:
+            mensaje = "*🔎 Resultados encontrados:*\n\n"
+            for s in sugerencias:
+                comando = f"/def_{s}"
+                nombre = s.replace("_", " ").capitalize()
+                mensaje += f"📘 `{comando}` → *{nombre}*\n"
+        else:
+            mensaje = "⚠️ No se encontró ningún término relacionado."
+
+        await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
+
+    except Exception as e:
+        logging.error(f"Error en /buscar: {e}")
+        await update.message.reply_text("❌ Hubo un error al buscar la definición.")
+
 
 # --- Registrar handlers ---
 
@@ -198,6 +228,7 @@ application.add_handler(CommandHandler("version", version))
 application.add_handler(CommandHandler("leyes", leyes))
 application.add_handler(CommandHandler("menu", menu))
 application.add_handler(CallbackQueryHandler(manejar_botones))
+application.add_handler(CommandHandler("buscar", buscar_definicion))
 
 # Cargar dinámicamente cada comando /def_<término>
 
