@@ -1,6 +1,7 @@
 import os
 import logging
 import asyncio
+import difflib
 from datetime import datetime
 from telegram import Update
 from telegram.ext import (
@@ -29,16 +30,19 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 # --- Metadatos del bot ---
-BOT_VERSION = "1.0.0"
-FECHA_ULTIMA_ACTUALIZACION = "2025-07-06"
+BOT_VERSION = "1.0.1"
+FECHA_ULTIMA_ACTUALIZACION = "2025-07-11"
 
 # --- Comandos base ---
+
 todos_los_comandos = {**respuestas_legales, **respuestas_medioambiente}
 
 # --- Crear aplicación Telegram ---
+
 application = ApplicationBuilder().token(TOKEN).build()
 
 # --- Handlers ---
+
 async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if update.message and update.message.text:
@@ -51,6 +55,8 @@ async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en responder: {e}")
 
+#HEADLER COMANDO NO RECONOCIDO
+
 async def comando_no_reconocido(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if update.message and update.message.chat.type in ["group", "supergroup"]:
@@ -60,6 +66,7 @@ async def comando_no_reconocido(update: Update, context: ContextTypes.DEFAULT_TY
     except Exception as e:
         logging.error(f"Error en comando_no_reconocido: {e}")
 
+#HEADLER COMANDO AYUDA
 async def ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         mensaje = generar_mensaje_ayuda()
@@ -67,7 +74,7 @@ async def ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en ayuda: {e}")
 
-#HEADLER ESTADO
+#HEADLER COMANDO ESTADO
 
 async def estado(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -79,6 +86,8 @@ async def estado(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(mensaje)
     except Exception as e:
         logging.error(f"Error en /estado: {e}")
+
+#HEADLER COMANDO DEBUG
 
 async def debug(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -95,6 +104,8 @@ async def debug(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("🛠️ Debug recibido. Revisa la consola.")
     except Exception as e:
         logging.error(f"Error en /debug: {e}")
+
+#HEADLER COMANDO VERSION 
 
 async def version(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -141,6 +152,8 @@ async def leyes(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         logging.error(f"Error en /leyes: {e}")
+
+#HEADLER COMANDO MENU
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -197,12 +210,19 @@ async def buscar_definicion(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         consulta = " ".join(context.args).lower()
-        sugerencias = []
 
+        # ✅ Búsqueda directa dentro del diccionario
+        sugerencias = []
         for termino in definiciones:
             if consulta in termino or consulta in definiciones[termino].lower():
                 sugerencias.append(termino)
 
+        # ✅ Coincidencias aproximadas (fuzzy matching)
+        if not sugerencias:
+            aproximadas = difflib.get_close_matches(consulta, definiciones.keys(), n=5, cutoff=0.6)
+            sugerencias.extend(aproximadas)
+
+        # 📦 Construir respuesta
         if sugerencias:
             mensaje = "*🔎 Resultados encontrados:*\n\n"
             for s in sugerencias:
