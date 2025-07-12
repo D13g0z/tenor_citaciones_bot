@@ -1,7 +1,68 @@
-# respuestas_medioambiente.py
-
 respuestas_medioambiente = {
-    'escombros': "🏗️ *Depositar escombros en bien nacional de uso público.*\n**Ordenanza 37 Medio Ambiente – Art. 29°**",
+    "residuo": (
+        "🚯 *Ordenanza N°37, Artículo 29, Inciso 1*\n"
+        "Botar papeles y basuras orgánicas e inorgánicas y todo tipo de residuos (líquidos o sólidos) en la vía pública, "
+        "parques, jardines, plazas, sitios eriazos, cauces naturales y/o artificiales de agua, riberas, humedales, sumideros, "
+        "alcantarillado, acequias y canales de la comuna, salvo en los lugares autorizados para tales efectos."
+    ),
+
+    "escombros": (
+        "🧱 *Ordenanza N°37, Artículo 29, Inciso 2*\n"
+        "Depositar o eliminar escombros en los bienes nacionales de uso público o en terrenos no autorizados para tal efecto."
+    ),
+
+    "vertederos": (
+        "🚫 *Ordenanza N°37, Artículo 29, Inciso 3*\n"
+        "Descargar, en depósitos o vertederos particulares, cualquier tipo de residuos, diferentes a aquellos que hayan sido motivo de autorización."
+    ),
+
+    "basura": (
+        "🏠 *Ordenanza N°37, Artículo 29, Inciso 4*\n"
+        "Arrojar y almacenar basuras y desperdicios de cualquier tipo en predios particulares, sin autorización expresa de la municipalidad y de la autoridad competente."
+    ),
+
+    "contaminacion_vias": (
+        "⚠️ *Ordenanza N°37, Artículo 29, Inciso 5*\n"
+        "Verter y esparcir hidrocarburos y otras sustancias contaminantes en los caminos, vías, aceras, bermas, cursos de agua, "
+        "sistemas de evacuación de aguas, alcantarillados y otros de la comuna."
+    ),
+
+    "rayados": (
+        "🎨 *Ordenanza N°37, Artículo 29, Inciso 6*\n"
+        "Efectuar rayados, pinturas u otras análogas, en todo el territorio de la comuna, en bienes nacionales de uso público, bienes de propiedad fiscal y municipal; "
+        "y muros y fachadas de inmuebles particulares, salvo que se cuente con autorización del dueño."
+    ),
+
+    "afiches": (
+        "📌 *Ordenanza N°37, Artículo 29, Inciso 7*\n"
+        "Instalar carteles, afiches, papeles y cualquier otro tipo de avisos de carácter comercial o de otra índole en los postes de alumbrado, "
+        "árboles, aceras, cierros, muros o similares."
+    ),
+
+    "suelo": (
+        "🌍 *Ordenanza N°37, Artículo 29, Inciso 8*\n"
+        "Contaminar suelos con productos químicos o biológicos que alteren nocivamente las características físicas, químicas o biológicas naturales del mismo."
+    ),
+
+    "animales": (
+        "🐾 *Ordenanza N°37, Artículo 29, Inciso 9*\n"
+        "Sacar, o dejar salir animales, desde las viviendas o comercios sin sus dueños o tenedores a cualquier título, en cuyo caso quedan obligados a la limpieza "
+        "de los excrementos que ellos produjeren."
+    ),
+
+    "transporte_desechos": (
+        "🚛 *Ordenanza N°37, Artículo 29, Inciso 10*\n"
+        "Trasladar por vía terrestre desechos como arena, ripio, tierra, productos de elaboración, maderas o desechos de bosques, que puedan escurrir o caer al suelo "
+        "o producir esparcimiento, sin contar con las autorizaciones municipales pertinentes."
+    ),
+
+    "arbolado": (
+        "🌳 *Ordenanza N°37, Artículo 29, Inciso 11*\n"
+        "Manejo, manipulación o intervención del arbolado urbano sin contar con autorización municipal, en cualquiera de sus estructuras, por parte de personas naturales o jurídicas. "
+        "Lo anterior constituirá una infracción a la presente ordenanza y el daño causado a las especies, ya sea total o parcial, en función de evaluación técnica llevada a cabo por "
+        "personal especializado de la Dirección de Espacio Público e Infraestructura, determinará la valorización del daño en función de la ordenanza sobre derechos municipales. "
+        "Lo anterior no aplicará en caso de intervenciones de emergencia."
+    ),
 
     'residuospeligrosos': "☣️ *Depositar residuos peligrosos, tóxicos, contaminantes, corrosivos y/o cortantes en recipientes no adecuados.*\n(indicar tipo de residuo)\n**Ordenanza 37 Medio Ambiente – Art. 37°**",
 

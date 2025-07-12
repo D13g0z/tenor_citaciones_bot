@@ -20,7 +20,13 @@ from ayuda import generar_mensaje_ayuda
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
 from definiciones import definiciones
+from categorias import categorias
 
+
+definiciones = {
+    **respuestas_legales,
+    **respuestas_medioambiente
+}
 
 # --- Logging ---
 
@@ -30,6 +36,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 # --- Metadatos del bot ---
+
 BOT_VERSION = "1.0.1"
 FECHA_ULTIMA_ACTUALIZACION = "2025-07-11"
 
@@ -166,14 +173,21 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 InlineKeyboardButton("📦 Comandos", callback_data="ver_comandos")
             ],
             [
+                InlineKeyboardButton("🚦 Tránsito", callback_data="tema:transito"),
+                InlineKeyboardButton("🌱 Medioambiente", callback_data="tema:medioambiente")
+            ],
+            [
                 InlineKeyboardButton("ℹ️ Estado", callback_data="ver_estado")
             ]
         ])
 
-        mensaje = "🔧 *Menú Principal del Bot*\n\nElige una opción:"
+        mensaje = "🔧 *Menú Principal del Bot*\n\nElige una opción temática o funcional:"
         await update.message.reply_text(mensaje, reply_markup=teclado, parse_mode=ParseMode.MARKDOWN)
+
     except Exception as e:
         logging.error(f"Error en /menu: {e}")
+
+#HEADLER MANEJO DE BOTONES 
 
 async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -183,18 +197,44 @@ async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if opcion == "ver_leyes":
         await leyes(update, context)
+
     elif opcion == "ver_comandos":
         await query.message.reply_text("📦 Escribe /ayuda o /version para ver los comandos disponibles.")
+
     elif opcion == "ver_estado":
         await estado(update, context)
+
     elif opcion.startswith("def:"):
         termino = opcion.split("def:")[1]
         definicion = definiciones.get(termino)
         if definicion:
             mensaje = f"📌 *{termino.replace('_', ' ').capitalize()}*\n{definicion}"
-            await query.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
+            boton_volver = InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔙 Volver al menú", callback_data="ver_comandos")]
+            ])
+            await query.message.reply_text(mensaje, reply_markup=boton_volver, parse_mode=ParseMode.MARKDOWN)
         else:
             await query.message.reply_text("⚠️ No se encontró esa definición.")
+
+    elif opcion.startswith("tema:"):
+        tema = opcion.split("tema:")[1]
+        comandos = categorias.get(tema)
+
+        if comandos:
+            botones = []
+            for cmd in comandos:
+                nombre = cmd.replace("_", " ").capitalize()
+                botones.append([InlineKeyboardButton(nombre, callback_data=f"def:{cmd}")])
+
+            teclado = InlineKeyboardMarkup(botones)
+            await query.message.reply_text(
+                f"📘 *Comandos relacionados con:* `{tema}`",
+                reply_markup=teclado,
+                parse_mode=ParseMode.MARKDOWN
+            )
+        else:
+            await query.message.reply_text("❌ No se encontró ese tema.")
+
     else:
         await query.message.reply_text("❓ Opción no reconocida.")
 
@@ -245,6 +285,65 @@ async def buscar_definicion(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error(f"Error en /buscar: {e}")
         await update.message.reply_text("❌ Hubo un error al buscar la definición.")
 
+#HEADLER TEMA
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+async def mostrar_tema(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        if not context.args:
+            await update.message.reply_text("🧭 Escribe el nombre de un tema. Ejemplo:\n`/tema transito` o `/tema medioambiente`", parse_mode=ParseMode.MARKDOWN)
+            return
+
+        tema = " ".join(context.args).lower()
+
+        if tema not in categorias:
+            await update.message.reply_text(f"❌ No se encontró el tema: `{tema}`", parse_mode=ParseMode.MARKDOWN)
+            return
+
+        botones = []
+        for cmd in categorias[tema]:
+            nombre = cmd.replace("_", " ").capitalize()
+            botones.append([InlineKeyboardButton(nombre, callback_data=f"def:{cmd}")])
+
+        teclado = InlineKeyboardMarkup(botones)
+        await update.message.reply_text(f"📘 *Comandos relacionados con:* `{tema}`", reply_markup=teclado, parse_mode=ParseMode.MARKDOWN)
+
+    except Exception as e:
+        logging.error(f"Error en /tema: {e}")
+        await update.message.reply_text("❌ Hubo un error al mostrar el tema.")
+#HEARLER ANUNCIAR PRUEBAS
+
+async def avisar_prueba_comandos(context: ContextTypes.DEFAULT_TYPE):
+    mensaje = (
+        "🚀 *¡Prueba masiva activada!*\n\n"
+        "Durante este período estaremos evaluando todos los comandos disponibles del bot.\n"
+        "Usa `/menu` para navegar por temas como Tránsito 🚦 y Medioambiente 🌱.\n"
+        "Reporta errores o sugerencias usando el canal correspondiente. ¡Gracias por participar! 🙌"
+    )
+
+    chat_ids = [1002781860922]  
+
+    for chat_id in chat_ids:
+        await context.bot.send_message(chat_id=chat_id, text=mensaje, parse_mode=ParseMode.MARKDOWN)
+
+ADMIN_ID = 1160883568 
+
+async def anunciar_prueba(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("⚠️ No tenés permiso para ejecutar este comando.")
+        return
+
+    await avisar_prueba_comandos(context)
+    await update.message.reply_text("📢 Mensaje enviado a todos los grupos.")
+
+#HEADLER ID
+
+async def obtener_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat = update.effective_chat
+    mensaje = f"🆔 El ID de este grupo es:\n`{chat.id}`"
+    await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
+
 # --- Registrar handlers ---
 
 application.add_handler(CommandHandler("ayuda", ayuda))
@@ -255,6 +354,9 @@ application.add_handler(CommandHandler("leyes", leyes))
 application.add_handler(CommandHandler("menu", menu))
 application.add_handler(CallbackQueryHandler(manejar_botones))
 application.add_handler(CommandHandler("buscar", buscar_definicion))
+application.add_handler(CommandHandler("tema", mostrar_tema))
+application.add_handler(CommandHandler("anunciar_prueba", anunciar_prueba))
+application.add_handler(CommandHandler("id", obtener_id))
 
 # Cargar dinámicamente cada comando /def_<término>
 
