@@ -74,6 +74,7 @@ async def comando_no_reconocido(update: Update, context: ContextTypes.DEFAULT_TY
         logging.error(f"Error en comando_no_reconocido: {e}")
 
 #HEADLER COMANDO AYUDA
+
 async def ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         mensaje = generar_mensaje_ayuda()
@@ -87,7 +88,7 @@ async def estado(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         mensaje = "✅ El bot está operativo y funcionando correctamente."
 
-        if hasattr(update, "callback_query"):
+        if update.callback_query:
             await update.callback_query.message.reply_text(mensaje)
         else:
             await update.message.reply_text(mensaje)
@@ -140,7 +141,7 @@ async def leyes(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ],
             [
                 InlineKeyboardButton("🌱 Ordenanza Medioambiente", url="https://www.bcn.cl/leychile/navegar?idNorma=1209493"),
-                InlineKeyboardButton("🐶 Ordenanza Tenencia responsable", url="https://www.bcn.cl/leychile/navegar?i=265348"),
+                InlineKeyboardButton("🐶 Ordenanza Tenencia responsable", url="https://www.bcn.cl/leychile/navegar?idNorma=1106037"),
             ]
         ])
 
@@ -312,6 +313,7 @@ async def mostrar_tema(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en /tema: {e}")
         await update.message.reply_text("❌ Hubo un error al mostrar el tema.")
+
 #HEARLER ANUNCIAR PRUEBAS
 
 async def avisar_prueba_comandos(context: ContextTypes.DEFAULT_TYPE):
