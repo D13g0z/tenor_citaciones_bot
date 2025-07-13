@@ -35,6 +35,7 @@ logging.basicConfig(
     level=logging.ERROR,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
 # --- Metadatos del bot ---
 
 BOT_VERSION = "1.0.1"
@@ -188,7 +189,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en /menu: {e}")
 
-#HEADLER MANEJO DE BOTONES 
+#HEADLER MANEJO DE BOTONES
 
 async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -236,9 +237,19 @@ async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await query.message.reply_text("❌ No se encontró ese tema.")
 
+    elif opcion.startswith("cuad:"):
+        codigo = opcion.split("cuad:")[1]
+        numero = cuadrantes.get(codigo)
+
+        if numero:
+            mensaje = f"📞 *Cuadrante {codigo}*\nNúmero de contacto: `{numero}`"
+            await query.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
+        else:
+            await query.message.reply_text("❌ No se encontró ese cuadrante.")
+
     else:
         await query.message.reply_text("❓ Opción no reconocida.")
-
+        
 #HEADLER AUXILIAR DEFINICIONES 
 
 def crear_handler_definicion(termino, definicion):
@@ -346,6 +357,22 @@ async def obtener_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mensaje = f"🆔 El ID de este grupo es:\n`{chat.id}`"
     await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
 
+#HEADLER CUADRANTES
+
+from cuadrantes import cuadrantes
+
+async def mostrar_cuadrantes(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    botones = []
+    for codigo in cuadrantes.keys():
+        botones.append([InlineKeyboardButton(codigo, callback_data=f"cuad:{codigo}")])
+
+    teclado = InlineKeyboardMarkup(botones)
+    await update.message.reply_text(
+        "🚓 *Selecciona un cuadrante para ver su número de contacto:*",
+        reply_markup=teclado,
+        parse_mode=ParseMode.MARKDOWN
+    )
+
 # --- Registrar handlers ---
 
 application.add_handler(CommandHandler("ayuda", ayuda))
@@ -359,6 +386,7 @@ application.add_handler(CommandHandler("buscar", buscar_definicion))
 application.add_handler(CommandHandler("tema", mostrar_tema))
 application.add_handler(CommandHandler("anunciar_prueba", anunciar_prueba))
 application.add_handler(CommandHandler("id", obtener_id))
+application.add_handler(CommandHandler("cuadrante", mostrar_cuadrantes))
 
 # Cargar dinámicamente cada comando /def_<término>
 
