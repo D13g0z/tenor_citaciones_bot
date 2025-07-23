@@ -21,6 +21,9 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
 from definiciones import definiciones
 from categorias import categorias
+from boostr import consultar_patente_boostr
+
+
 
 
 definiciones = {
@@ -373,6 +376,60 @@ async def mostrar_cuadrantes(update: Update, context: ContextTypes.DEFAULT_TYPE)
         parse_mode=ParseMode.MARKDOWN
     )
 
+#HEADLER CONSULTA VEHICULOS BOOSTR
+async def pat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        if len(context.args) == 0:
+            await update.message.reply_text(
+                "❗ Debes ingresar una patente. Ejemplo: `/pat AB1234`",
+                parse_mode=ParseMode.MARKDOWN
+            )
+            return
+
+        # Limpieza básica de la patente
+        raw = context.args[0]
+        consulta = ''.join(filter(str.isalnum, raw.upper()))
+
+        resultado = consultar_patente_boostr(consulta)
+
+        if resultado and isinstance(resultado, dict):
+            marca       = resultado.get("marca", "Desconocida")
+            modelo      = resultado.get("modelo", "Desconocido")
+            año         = resultado.get("anio", "No disponible")
+            tipo        = resultado.get("tipo", "No definido")
+            motor       = resultado.get("numero_motor", "Sin datos")
+            verificador = resultado.get("digito_verificador", "N/A")
+            dueño       = resultado.get("nombre_dueno", "No registrado")
+            documento   = resultado.get("documento_dueno", "Sin número")
+
+            mensaje = (
+                f"🔍 *Resultado para patente:* `{consulta}`\n\n"
+                f"🏷️ *Marca:* {marca}\n"
+                f"🚘 *Modelo:* {modelo}\n"
+                f"📅 *Año:* {año}\n"
+                f"🚦 *Tipo:* {tipo}\n"
+                f"🔧 *Motor:* `{motor}`\n"
+                f"✅ *Dígito verificador:* `{verificador}`\n\n"
+                f"👤 *Dueño:* {dueño}\n"
+                f"🪪 *Documento:* `{documento}`"
+            )
+
+            await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
+
+        else:
+            await update.message.reply_text(
+                f"⚠️ No se encontraron datos para la patente `{consulta}`.",
+                parse_mode=ParseMode.MARKDOWN
+            )
+
+    except Exception as e:
+        logging.error(f"Error en /pat: {e}")
+        await update.message.reply_text(
+            "💥 Ocurrió un error al consultar los datos. Intenta nuevamente más tarde."
+        )
+
+
+
 # --- Registrar handlers ---
 
 application.add_handler(CommandHandler("ayuda", ayuda))
@@ -387,6 +444,7 @@ application.add_handler(CommandHandler("tema", mostrar_tema))
 application.add_handler(CommandHandler("anunciar_prueba", anunciar_prueba))
 application.add_handler(CommandHandler("id", obtener_id))
 application.add_handler(CommandHandler("cuadrante", mostrar_cuadrantes))
+application.add_handler(CommandHandler("pat", pat))
 
 # Cargar dinámicamente cada comando /def_<término>
 
