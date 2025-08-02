@@ -21,6 +21,6 @@ respuestas_legales = {
     'revision': "🔧 *Conducir sin revisión técnica (debe ser retirado de circulación).* \n**Ley 18.290 – Art. 56**",
     'seguro': "📄 *Conducir sin seguro obligatorio (debe ser retirado de circulación).* \n**Ley 18.290 – Art. 56**",
     'permiso': "💰 *Conducir sin permiso de circulación (debe ser retirado de circulación).* \n**Ley 18.290 – Art. 56**",
-    'homo': "🛠️ *Conducir sin certificado de homologación (debe ser retirado de circulación).* \n**Ley 18.290 – Art. 56**",
+    'homologacion': "🛠️ *Conducir sin certificado de homologación (debe ser retirado de circulación).* \n**Ley 18.290 – Art. 56**",
     'viraru': "↩️ *Virar en U en lugar prohibido y señalizado.* \n**Ley 18.290 – Art. 137°**",
 }

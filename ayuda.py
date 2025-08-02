@@ -1,4 +1,4 @@
-# ayuda
+# ayuda.py
 
 from respuestas import respuestas_legales
 from respuestas_medioambiente import respuestas_medioambiente
