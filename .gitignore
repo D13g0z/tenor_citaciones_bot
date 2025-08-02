@@ -3,6 +3,7 @@ venv/
 
 # Configuración local
 .env
+config.py
 
 # Archivos temporales de Python
 __pycache__/

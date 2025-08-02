@@ -21,8 +21,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
 from definiciones import definiciones
 from categorias import categorias
-from boostr import consultar_patente_boostr
-
+from cuadrantes import cuadrantes
 
 
 
@@ -41,8 +40,8 @@ logging.basicConfig(
 
 # --- Metadatos del bot ---
 
-BOT_VERSION = "1.0.1"
-FECHA_ULTIMA_ACTUALIZACION = "2025-07-11"
+BOT_VERSION = "1.0.2"
+FECHA_ULTIMA_ACTUALIZACION = "2025-07-23"
 
 # --- Comandos base ---
 
@@ -90,7 +89,12 @@ async def ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def estado(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        mensaje = "✅ El bot está operativo y funcionando correctamente."
+        mensaje = (
+    "✅ *Estado del bot: operativo*\n\n"
+    f"🧩 *Comandos cargados:* {len(todos_los_comandos)}\n"
+    f"📅 *Última actualización:* {FECHA_ULTIMA_ACTUALIZACION}\n"
+    f"🔢 *Versión:* {BOT_VERSION}"
+)
 
         if update.callback_query:
             await update.callback_query.message.reply_text(mensaje)
@@ -117,7 +121,7 @@ async def debug(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en /debug: {e}")
 
-#HEADLER COMANDO VERSION 
+#HEADLER COMANDO VERSION
 
 async def version(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -133,7 +137,7 @@ async def version(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error en /version: {e}")
 
-#HEARDLER LEYES        
+#HEARDLER LEYES
 
 async def leyes(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -145,7 +149,7 @@ async def leyes(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ],
             [
                 InlineKeyboardButton("🌱 Ordenanza Medioambiente", url="https://www.bcn.cl/leychile/navegar?idNorma=1209493"),
-                InlineKeyboardButton("🐶 Ordenanza Tenencia responsable", url="https://www.bcn.cl/leychile/navegar?idNorma=1106037"),
+                InlineKeyboardButton("🐶 Ley Cholito", url="https://www.bcn.cl/leychile/navegar?idNorma=1106037"),
             ]
         ])
 
@@ -182,7 +186,8 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 InlineKeyboardButton("🌱 Medioambiente", callback_data="tema:medioambiente")
             ],
             [
-                InlineKeyboardButton("ℹ️ Estado", callback_data="ver_estado")
+                InlineKeyboardButton("ℹ️ Estado", callback_data="ver_estado"),
+                InlineKeyboardButton("🚓 Cuadrantes", callback_data="ver_cuadrantes"),
             ]
         ])
 
@@ -204,10 +209,13 @@ async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await leyes(update, context)
 
     elif opcion == "ver_comandos":
-        await query.message.reply_text("📦 Escribe /ayuda o /version para ver los comandos disponibles.")
+        await query.message.reply_text("📦 Escribe /ayuda o /tema para ver los comandos disponibles.")
 
     elif opcion == "ver_estado":
         await estado(update, context)
+
+    elif opcion == "ver_cuadrantes":
+        await mostrar_cuadrantes(update, context)
 
     elif opcion.startswith("def:"):
         termino = opcion.split("def:")[1]
@@ -251,9 +259,10 @@ async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.message.reply_text("❌ No se encontró ese cuadrante.")
 
     else:
+        logging.warning(f"Opción no reconocida: {opcion}")
         await query.message.reply_text("❓ Opción no reconocida.")
-        
-#HEADLER AUXILIAR DEFINICIONES 
+
+#HEADLER AUXILIAR DEFINICIONES
 
 def crear_handler_definicion(termino, definicion):
     async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -330,20 +339,29 @@ async def mostrar_tema(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 #HEARLER ANUNCIAR PRUEBAS
 
+import logging
+from datetime import datetime
+from telegram.constants import ParseMode
+
+# ID del administrador autorizado
+ADMIN_ID = 1160883568 #Id Diego Zúñiga
+# Lista de grupos donde se enviará el anuncio
+CHAT_IDS_PRUEBA = [1002781860922]
 async def avisar_prueba_comandos(context: ContextTypes.DEFAULT_TYPE):
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M")
     mensaje = (
-        "🚀 *¡Prueba masiva activada!*\n\n"
+        f"🚀 *¡Prueba masiva activada!*\n🕒 {fecha}\n\n"
         "Durante este período estaremos evaluando todos los comandos disponibles del bot.\n"
         "Usa `/menu` para navegar por temas como Tránsito 🚦 y Medioambiente 🌱.\n"
         "Reporta errores o sugerencias usando el canal correspondiente. ¡Gracias por participar! 🙌"
     )
 
-    chat_ids = [1002781860922]  
-
-    for chat_id in chat_ids:
-        await context.bot.send_message(chat_id=chat_id, text=mensaje, parse_mode=ParseMode.MARKDOWN)
-
-ADMIN_ID = 1160883568 
+    for chat_id in CHAT_IDS_PRUEBA:
+        try:
+            await context.bot.send_message(chat_id=chat_id, text=mensaje, parse_mode=ParseMode.MARKDOWN)
+            logging.info(f"✅ Mensaje de prueba enviado a grupo {chat_id}")
+        except Exception as e:
+            logging.error(f"❌ Error al enviar mensaje a {chat_id}: {e}")
 
 async def anunciar_prueba(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
@@ -352,7 +370,6 @@ async def anunciar_prueba(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await avisar_prueba_comandos(context)
     await update.message.reply_text("📢 Mensaje enviado a todos los grupos.")
-
 #HEADLER ID
 
 async def obtener_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -361,73 +378,41 @@ async def obtener_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
 
 #HEADLER CUADRANTES
-
-from cuadrantes import cuadrantes
-
 async def mostrar_cuadrantes(update: Update, context: ContextTypes.DEFAULT_TYPE):
     botones = []
     for codigo in cuadrantes.keys():
         botones.append([InlineKeyboardButton(codigo, callback_data=f"cuad:{codigo}")])
 
     teclado = InlineKeyboardMarkup(botones)
-    await update.message.reply_text(
+
+    target = update.callback_query.message if update.callback_query else update.message
+    await target.reply_text(
         "🚓 *Selecciona un cuadrante para ver su número de contacto:*",
         reply_markup=teclado,
         parse_mode=ParseMode.MARKDOWN
     )
 
-#HEADLER CONSULTA VEHICULOS BOOSTR
-async def pat(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        if len(context.args) == 0:
-            await update.message.reply_text(
-                "❗ Debes ingresar una patente. Ejemplo: `/pat AB1234`",
-                parse_mode=ParseMode.MARKDOWN
-            )
-            return
+#HERADLER COMANDO ESTACIONAR
 
-        # Limpieza básica de la patente
-        raw = context.args[0]
-        consulta = ''.join(filter(str.isalnum, raw.upper()))
+terminos_estacionar = [
+    'acera', 'pasopeatonal', 'platabanda', 'bandejon', 'areaverde',
+    'ciclovia', 'grifo', 'esquina', 'porton', 'prohibido',
+    'cruce', 'abandono'
+]
 
-        resultado = consultar_patente_boostr(consulta)
+async def estacionar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    botones = []
+    for termino in terminos_estacionar:
+        nombre = termino.replace("_", " ").capitalize()
+        botones.append([InlineKeyboardButton(nombre, callback_data=f"def:{termino}")])
 
-        if resultado and isinstance(resultado, dict):
-            marca       = resultado.get("marca", "Desconocida")
-            modelo      = resultado.get("modelo", "Desconocido")
-            año         = resultado.get("anio", "No disponible")
-            tipo        = resultado.get("tipo", "No definido")
-            motor       = resultado.get("numero_motor", "Sin datos")
-            verificador = resultado.get("digito_verificador", "N/A")
-            dueño       = resultado.get("nombre_dueno", "No registrado")
-            documento   = resultado.get("documento_dueno", "Sin número")
+    teclado = InlineKeyboardMarkup(botones)
 
-            mensaje = (
-                f"🔍 *Resultado para patente:* `{consulta}`\n\n"
-                f"🏷️ *Marca:* {marca}\n"
-                f"🚘 *Modelo:* {modelo}\n"
-                f"📅 *Año:* {año}\n"
-                f"🚦 *Tipo:* {tipo}\n"
-                f"🔧 *Motor:* `{motor}`\n"
-                f"✅ *Dígito verificador:* `{verificador}`\n\n"
-                f"👤 *Dueño:* {dueño}\n"
-                f"🪪 *Documento:* `{documento}`"
-            )
-
-            await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
-
-        else:
-            await update.message.reply_text(
-                f"⚠️ No se encontraron datos para la patente `{consulta}`.",
-                parse_mode=ParseMode.MARKDOWN
-            )
-
-    except Exception as e:
-        logging.error(f"Error en /pat: {e}")
-        await update.message.reply_text(
-            "💥 Ocurrió un error al consultar los datos. Intenta nuevamente más tarde."
-        )
-
+    await update.message.reply_text(
+        "🚗 *Normas sobre estacionamiento:*\nSelecciona una infracción para ver su detalle:",
+        reply_markup=teclado,
+        parse_mode=ParseMode.MARKDOWN
+    )
 
 
 # --- Registrar handlers ---
@@ -443,15 +428,15 @@ application.add_handler(CommandHandler("buscar", buscar_definicion))
 application.add_handler(CommandHandler("tema", mostrar_tema))
 application.add_handler(CommandHandler("anunciar_prueba", anunciar_prueba))
 application.add_handler(CommandHandler("id", obtener_id))
-application.add_handler(CommandHandler("cuadrante", mostrar_cuadrantes))
-application.add_handler(CommandHandler("pat", pat))
+application.add_handler(CommandHandler("cuadrantes", mostrar_cuadrantes))
+application.add_handler(CommandHandler("estacionar", estacionar))
 
 # Cargar dinámicamente cada comando /def_<término>
 
 for termino, definicion in definiciones.items():
     comando = f"def_{termino}"
-    if len(comando) <= 32:  
-        
+    if len(comando) <= 32:
+
         # Telegram command limit
 
         application.add_handler(CommandHandler(comando, crear_handler_definicion(termino, definicion)))
@@ -467,4 +452,4 @@ application.add_handler(MessageHandler(filters.COMMAND, comando_no_reconocido))
 
 if __name__ == "__main__":
     print("🚀 Iniciando bot...", flush=True)
-    asyncio.run(application.run_polling()) 
+    asyncio.run(application.run_polling())
