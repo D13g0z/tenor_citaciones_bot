@@ -3,12 +3,13 @@
 categorias = {
     "medioambiente": [
         "residuo", "escombros", "vertederos", "basura_privada", "contaminacion_vias",
-        "rayados", "afiches", "suelo", "animales", "transporte_desechos", "arbolado", 'residuospeligrosos',
-        'basura', 'lavado', 'agua', 'calefaccion', 'ruidos',
+        "rayados", "afiches", "suelo", "animales", "transporte_desechos", "arbolado", "residuospeligrosos",
+        "basura", "lavado", "agua", "calefaccion", "ruidos",
     ],
     "transito": [
-        'acera', 'pasopeatonal', 'platabanda', 'bandejon', 'areaverde', 'ciclovia', 'grifo', 'esquina', 'porton', 'prohibido', 'cruce',
-        'abandono', 'licencia', 'placa', 'revision', 'seguro', 'permiso',
-        'homo', 'viraru',
+        "placa", "revision", "seguro", "permiso", "homologacion",
+        "prohibido", "acera", "pasopeatonal", "platabanda", "bandejon", "cruce", "ciclovia",
+        "grifos", "cruceferroviario", "esquina", "paradalocomocion", "puertaspublicas",
+        "garajes", "senales", "recintosmilitares", "abandono", "licencia", "viraru"
     ]
 }

@@ -4,6 +4,7 @@ respuestas_medioambiente = {
         "Botar papeles y basuras orgánicas e inorgánicas y todo tipo de residuos (líquidos o sólidos) en la vía pública, "
         "parques, jardines, plazas, sitios eriazos, cauces naturales y/o artificiales de agua, riberas, humedales, sumideros, "
         "alcantarillado, acequias y canales de la comuna, salvo en los lugares autorizados para tales efectos."
+        "🚯 *Tenor boleta:  *\n"
     ),
 
     "escombros": (

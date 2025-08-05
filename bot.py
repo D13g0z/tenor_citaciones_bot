@@ -2,12 +2,15 @@ import os
 import logging
 import asyncio
 import difflib
+from difflib import get_close_matches
 from datetime import datetime
 from telegram import Update
 from telegram.ext import (
+    ApplicationHandlerStop,
     ApplicationBuilder,
     CommandHandler,
     MessageHandler,
+    ContextTypes,
     ContextTypes,
     filters
 )
@@ -40,8 +43,8 @@ logging.basicConfig(
 
 # --- Metadatos del bot ---
 
-BOT_VERSION = "1.0.3"
-FECHA_ULTIMA_ACTUALIZACION = "2025-08-02"
+BOT_VERSION = "1.0.5"
+FECHA_ULTIMA_ACTUALIZACION = "2025-08-05"
 
 # --- Comandos base ---
 
@@ -71,17 +74,6 @@ async def obtener_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
     mensaje = f"🆔 El ID de este grupo es:\n`{chat.id}`"
     await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
-
-#HEADLER COMANDO NO RECONOCIDO
-
-async def comando_no_reconocido(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        if update.message and update.message.chat.type in ["group", "supergroup"]:
-            await update.message.reply_text(
-                "⚠️ Comando no reconocido. Escribe /ayuda para ver los disponibles."
-            )
-    except Exception as e:
-        logging.error(f"Error en comando_no_reconocido: {e}")
 
 #HEADLER COMANDO AYUDA
 
@@ -178,7 +170,99 @@ async def anunciar_prueba(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await avisar_prueba_comandos(context)
     await update.message.reply_text("📢 Mensaje enviado a todos los grupos.")
     
-#HEADLER MANEJO DE BOTONES
+# HANDLER MANEJO DE BOTONES
+
+# Función de generar botones categoria transito
+
+def generar_botones_categorias_transito(categorias_legales_transito):
+    botones = []
+    for categoria in categorias_legales_transito:
+        nombre = categoria.replace("_", " ").capitalize()
+        botones.append([InlineKeyboardButton(nombre, callback_data=f"categoria:{categoria}")])
+    return InlineKeyboardMarkup(botones)
+
+# Función para generar botones de tránsito
+
+def generar_botones_transito(respuestas_legales):
+    botones = []
+    for clave in respuestas_legales:
+        nombre = clave.replace("_", " ").capitalize()
+        botones.append([InlineKeyboardButton(nombre, callback_data=f"transito:{clave}")])
+    return InlineKeyboardMarkup(botones)
+
+# Función para genenrar botones de documentos
+
+def generar_botones_documentos(respuestas_legales):
+    claves_documentos = [
+        "placa", "revision", "seguro", "permiso", "homologacion"
+    ]
+    botones = []
+    for clave in claves_documentos:
+        nombre = clave.replace("_", " ").capitalize()
+        botones.append([InlineKeyboardButton(nombre, callback_data=f"transito:{clave}")])
+    return InlineKeyboardMarkup(botones)
+
+# 📂 Categorías de infracciones de tránsito
+
+categorias_legales_transito = {
+
+    "📄 Documentación": [
+        "placa", "revision", "seguro", "permiso", "homologacion"
+    ],
+
+    "🅿️ Estacionamiento": [
+    "acera", "pasopeatonal", "platabanda", "bandejon", "areaverde",
+    "ciclovia", "grifo", "esquina", "porton", "prohibido",
+    "cruce", "abandono", "discapacitados"
+    ],
+
+    "🛞 Neumáticos": [
+        "neumaticos"
+    ],
+    "🧰 Equipamiento obligatorio": [
+        "vidrios_polarizados", "objetos_en_vidrios", "limpiaparabrisas", "espejos_retrovisores",
+        "velocimetro", "parachoques", "extintor", "elementos_emergencia", "rueda_repuesto",
+        "botiquin_cunas", "cinturon_seguridad"
+    ],
+    "🐾 Transporte de animales": [
+        "animal_delantero", "animal_sin_arnes"
+    ],
+    "↩️ Maniobras": [
+        "marcha_atras", "marcha_atras_cruce", "contra_sentido", "viraje_indebido", "virar_sin_preferencia",
+        "virar_interseccion", "viraru", "virar_menos_200m", "no_senalizar_viraje", "virar_izquierda_sin_ceder"
+    ],
+    "🚗 Adelantamientos": [
+        "adelantar_sin_espacio", "adelantamiento_indebido", "adelantamiento_tunel",
+        "adelantamiento_eje_izquierdo", "adelantamiento_cruce_peatonal"
+    ],
+    "📏 Distancia y eje de calzada": [
+        "distancia_prudente", "sobrepasar_eje"
+    ],
+    "🚫 Vías exclusivas": [
+        "vias_exclusivas"
+    ],
+    "🏍️ Bicicletas y motocicletas": [
+        "moto_mas_dos", "moto_tomarse_vehiculo", "moto_noche_posicion", "moto_carga_manos"
+    ],
+    "🐴 Vehículos de tracción animal": [
+        "vehiculo_animal"
+    ],
+    "🛑 Señales de tránsito": [
+        "pare_no_detenerse", "ceda_el_paso", "derecho_preferente"
+    ],
+    "🚨 Vehículos de emergencia": [
+        "no_ceder_emergencia", "facultades_emergencia", "emergencia_situacion_prohibida", "emergencia_senal_audible"
+    ],
+
+    "💦 Agua en calzada": [
+        "mojar_acera"
+    ],
+    "📦 Otras infracciones": [
+        
+    ]
+}
+
+# Handler principal
 
 async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -186,6 +270,7 @@ async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     opcion = query.data
 
+    # ▶️ Menú principal
     if opcion == "ver_leyes":
         await leyes(update, context)
 
@@ -198,9 +283,53 @@ async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif opcion == "ver_cuadrantes":
         await mostrar_cuadrantes(update, context)
 
+    # 🚦 Mostrar categorías de tránsito
+    elif opcion == "ver_transito":
+        markup = generar_botones_categorias_transito(categorias_legales_transito)
+        await query.message.reply_text(
+            "🚦 *Categorías de infracciones de tránsito*\nSelecciona una categoría para ver sus infracciones:",
+            reply_markup=markup,
+            parse_mode=ParseMode.MARKDOWN
+        )
+
+    # 🚦 Mostrar infracciones dentro de una categoría
+    elif opcion.startswith("categoria:"):
+        categoria = opcion.split("categoria:")[1]
+        claves = categorias_legales_transito.get(categoria)
+
+        if claves:
+            botones = []
+            for clave in claves:
+                nombre = clave.replace("_", " ").capitalize()
+                botones.append([InlineKeyboardButton(nombre, callback_data=f"transito:{clave}")])
+
+            teclado = InlineKeyboardMarkup(botones)
+            await query.message.reply_text(
+                f"🚦 *Infracciones en:* `{categoria.replace('_', ' ').capitalize()}`",
+                reply_markup=teclado,
+                parse_mode=ParseMode.MARKDOWN
+            )
+        else:
+            await query.message.reply_text("⚠️ No se encontraron infracciones para esa categoría.")
+
+    # 🚦 Mostrar definición de una infracción
+    elif opcion.startswith("transito:"):
+        clave = opcion.split("transito:")[1]
+        respuesta = respuestas_legales.get(clave)
+
+        if respuesta:
+            boton_volver = InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔙 Volver al menú de tránsito", callback_data="ver_transito")]
+            ])
+            await query.message.reply_text(respuesta, reply_markup=boton_volver, parse_mode=ParseMode.MARKDOWN)
+        else:
+            await query.message.reply_text("⚠️ No se encontró información para esa infracción.")
+
+    # 📘 Definiciones por comando
     elif opcion.startswith("def:"):
         termino = opcion.split("def:")[1]
         definicion = definiciones.get(termino)
+
         if definicion:
             mensaje = f"📌 *{termino.replace('_', ' ').capitalize()}*\n{definicion}"
             boton_volver = InlineKeyboardMarkup([
@@ -210,6 +339,7 @@ async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await query.message.reply_text("⚠️ No se encontró esa definición.")
 
+    # 📂 Comandos por tema
     elif opcion.startswith("tema:"):
         tema = opcion.split("tema:")[1]
         comandos = categorias.get(tema)
@@ -229,6 +359,7 @@ async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await query.message.reply_text("❌ No se encontró ese tema.")
 
+    # 📞 Cuadrantes
     elif opcion.startswith("cuad:"):
         codigo = opcion.split("cuad:")[1]
         numero = cuadrantes.get(codigo)
@@ -239,30 +370,32 @@ async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await query.message.reply_text("❌ No se encontró ese cuadrante.")
 
+    # ❓ Opción no reconocida
     else:
         logging.warning(f"Opción no reconocida: {opcion}")
         await query.message.reply_text("❓ Opción no reconocida.")
+
 #HEADLER COMANDO MENU
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if update.message.chat.type not in ["group", "supergroup"]:
             return
-        
+
         teclado = InlineKeyboardMarkup([
-    [
-        InlineKeyboardButton("📘 Leyes", callback_data="ver_leyes"),
-        InlineKeyboardButton("📗 Ordenanzas", callback_data="ver_ordenanzas"),
-    ],
-    [
-        InlineKeyboardButton("🚦 Tránsito", callback_data="tema:transito"),
-        InlineKeyboardButton("🌱 Medioambiente", callback_data="tema:medioambiente")
-    ],
-    [
-        InlineKeyboardButton("ℹ️ Estado", callback_data="ver_estado"),
-        InlineKeyboardButton("🚓 Cuadrantes", callback_data="ver_cuadrantes"),
-    ]
-])
+            [
+                InlineKeyboardButton("📘 Leyes", callback_data="ver_leyes"),
+                InlineKeyboardButton("📗 Ordenanzas", callback_data="ver_ordenanzas"),
+            ],
+            [
+                InlineKeyboardButton("🚦 Tránsito", callback_data="ver_transito"),
+                InlineKeyboardButton("🌱 Medioambiente", callback_data="tema:medioambiente")
+            ],
+            [
+                InlineKeyboardButton("ℹ️ Estado", callback_data="ver_estado"),
+                InlineKeyboardButton("🚓 Cuadrantes", callback_data="ver_cuadrantes"),
+            ]
+        ])
 
         mensaje = "🔧 *Menú Principal del Bot*\n\nElige una opción temática o funcional:"
         await update.message.reply_text(mensaje, reply_markup=teclado, parse_mode=ParseMode.MARKDOWN)
@@ -334,8 +467,6 @@ def crear_handler_definicion(termino, definicion):
 
 #HEADLER COMANDO BUSCAR
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
 async def buscar_definicion(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if not context.args:
@@ -370,27 +501,35 @@ async def buscar_definicion(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 #HEADLER TEMA
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
 async def mostrar_tema(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if not context.args:
-            await update.message.reply_text("🧭 Escribe el nombre de un tema. Ejemplo:\n`/tema transito` o `/tema medioambiente`", parse_mode=ParseMode.MARKDOWN)
+            await update.message.reply_text(
+                "🧭 Escribe el nombre de un tema. Ejemplo:\n`/tema transito` o `/tema medioambiente`",
+                parse_mode=ParseMode.MARKDOWN
+            )
             return
 
         tema = " ".join(context.args).lower()
 
         if tema not in categorias:
-            await update.message.reply_text(f"❌ No se encontró el tema: `{tema}`", parse_mode=ParseMode.MARKDOWN)
+            await update.message.reply_text(
+                f"❌ No se encontró el tema: `{tema}`",
+                parse_mode=ParseMode.MARKDOWN
+            )
             return
 
         botones = []
         for cmd in categorias[tema]:
             nombre = cmd.replace("_", " ").capitalize()
-            botones.append([InlineKeyboardButton(nombre, callback_data=f"def:{cmd}")])
+            botones.append([InlineKeyboardButton(nombre, callback_data=f"cat:{cmd}")])
 
         teclado = InlineKeyboardMarkup(botones)
-        await update.message.reply_text(f"📘 *Comandos relacionados con:* `{tema}`", reply_markup=teclado, parse_mode=ParseMode.MARKDOWN)
+        await update.message.reply_text(
+            f"📘 *Categorías disponibles en:* `{tema}`",
+            reply_markup=teclado,
+            parse_mode=ParseMode.MARKDOWN
+        )
 
     except Exception as e:
         logging.error(f"Error en /tema: {e}")
@@ -433,6 +572,57 @@ async def estacionar(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode=ParseMode.MARKDOWN
     )
 
+#HEADLER COMANDO DOCUMENTOS
+
+async def mostrar_documentos(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    botones = []
+    claves_documentos = [
+        "placa", "revision", "seguro", "permiso", "homologacion"
+    ]
+    for clave in claves_documentos:
+        nombre = clave.replace("_", " ").capitalize()
+        botones.append([InlineKeyboardButton(nombre, callback_data=f"transito:{clave}")])
+
+    teclado = InlineKeyboardMarkup(botones)
+    await update.message.reply_text(
+        "📄 *Documentación obligatoria para conducir*\nSelecciona un ítem para ver el detalle:",
+        reply_markup=teclado,
+        parse_mode=ParseMode.MARKDOWN
+    )
+
+#HEADLER CORRECION ORTOGRAFICA GLOBAL
+
+COMANDOS_VALIDOS = [
+    # Comandos principales
+    "id", "ayuda", "estado", "debug", "version", "menu", "anunciar_prueba",
+    "leyes", "buscar", "tema", "cuadrantes", "estacionar", "documentos",
+
+    # Comandos legales
+    "placa", "revision", "seguro", "permiso", "homologacion", "neumaticos",
+    "vidrios_polarizados", "objetos_en_vidrios", "limpiaparabrisas", "espejos_retrovisores",
+    "velocimetro", "parachoques", "extintor", "elementos_emergencia", "rueda_repuesto",
+    "botiquin_cunas", "cinturon_seguridad", "animal_delantero", "animal_sin_arnes",
+    "marcha_atras", "marcha_atras_cruce", "contra_sentido", "velocidad_minima",
+    "mojar_acera", "sobrepasar_eje", "adelantar_sin_espacio", "adelantamiento_indebido",
+    "adelantamiento_tunel", "adelantamiento_eje_izquierdo", "adelantamiento_cruce_peatonal",
+    "distancia_prudente", "vias_exclusivas", "moto_mas_dos", "moto_tomarse_vehiculo",
+    "moto_noche_posicion", "moto_carga_manos", "vehiculo_animal", "virar_sin_preferencia",
+    "virar_interseccion", "viraru", "viraje_indebido", "virar_menos_200m",
+    "no_senalizar_viraje", "virar_izquierda_sin_ceder", "pare_no_detenerse",
+    "ceda_el_paso", "derecho_preferente", "no_ceder_emergencia", "facultades_emergencia",
+    "emergencia_situacion_prohibida", "emergencia_senal_audible", "discapacitados",
+
+    # Comandos legales adicionales (estacionamiento)
+    "prohibido", "acera", "pasopeatonal", "platabanda", "bandejon", "cruce",
+    "ciclovia", "grifo", "cruceferroviario", "esquina", "paradalocomocion",
+    "puertaspublicas", "garajes", "senales", "recintosmilitares", "abandono",
+
+    # Comandos medioambientales
+    "residuo", "escombros", "vertederos", "basura", "contaminacion_vias", "rayados",
+    "afiches", "suelo", "animales", "transporte_desechos", "arbolado",
+    "residuospeligrosos", "lavado", "agua", "calefaccion", "ruidos"
+]
+
 
 # --- Registrar handlers de comandos ---
 application.add_handler(CommandHandler("id", obtener_id))
@@ -447,6 +637,7 @@ application.add_handler(CommandHandler("buscar", buscar_definicion))
 application.add_handler(CommandHandler("tema", mostrar_tema))
 application.add_handler(CommandHandler("cuadrantes", mostrar_cuadrantes))
 application.add_handler(CommandHandler("estacionar", estacionar))
+application.add_handler(CommandHandler("documentos", mostrar_documentos))
 
 # --- Registrar handlers de botones específicos ---
 application.add_handler(CallbackQueryHandler(ordenanzas, pattern="^ver_ordenanzas$"))
@@ -461,7 +652,6 @@ for termino, definicion in definiciones.items():
     if len(comando) <= 32:
 
         # Telegram command limit
-
         application.add_handler(CommandHandler(comando, crear_handler_definicion(termino, definicion)))
     else:
         logging.warning(f"⚠️ Comando demasiado largo y no registrado: {comando}")
@@ -469,7 +659,7 @@ for termino, definicion in definiciones.items():
 for cmd in todos_los_comandos:
     application.add_handler(CommandHandler(cmd, responder))
 
-application.add_handler(MessageHandler(filters.COMMAND, comando_no_reconocido))
+
 
 # --- Ejecución por consola ---
 
