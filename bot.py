@@ -75,6 +75,23 @@ async def obtener_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mensaje = f"🆔 El ID de este grupo es:\n`{chat.id}`"
     await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
 
+#HEADLER BIENVENIDA
+
+async def bienvenida_nuevo_miembro(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    nuevos_usuarios = update.message.new_chat_members
+    for usuario in nuevos_usuarios:
+        nombre = usuario.full_name
+        await update.message.reply_text(
+            f"🌟 ¡Hola {nombre}, bienvenido/a al grupo!\n\n"
+            f"Soy *Diego Zúñiga*, creador del bot, y me alegra que te unas.\n\n"
+            f"🤖 Este bot fue desarrollado para ayudarte a entender de forma clara y rápida distintas normas legales, ordenanzas municipales y temas ciudadanos que pueden ser útiles en nuestro trabajo día a día.\n\n"
+            f"📌 Para comenzar, solo escribe el comando `/menu`. Desde ahí podrás explorar categorías como tránsito, medio ambiente, documentación y más.\n\n"
+            f"Espero que esta herramienta te resulte práctica y que te acompañe cuando necesites información confiable.\n\n"
+            f"¡Bienvenido/a nuevamente, y que tengas una excelente experiencia!",
+            parse_mode="Markdown"
+        )
+
+
 #HEADLER COMANDO AYUDA
 
 async def ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -625,6 +642,7 @@ COMANDOS_VALIDOS = [
 
 
 # --- Registrar handlers de comandos ---
+application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, bienvenida_nuevo_miembro))
 application.add_handler(CommandHandler("id", obtener_id))
 application.add_handler(CommandHandler("ayuda", ayuda))
 application.add_handler(CommandHandler("estado", estado))
