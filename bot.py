@@ -22,7 +22,7 @@ from respuestas_medioambiente import respuestas_medioambiente
 from ayuda import generar_mensaje_ayuda
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
-from definiciones import definiciones
+from definiciones_ley import definiciones
 from categorias import categorias
 from cuadrantes import cuadrantes
 
@@ -30,7 +30,8 @@ from cuadrantes import cuadrantes
 
 definiciones = {
     **respuestas_legales,
-    **respuestas_medioambiente
+    **respuestas_medioambiente,
+    **definiciones
 }
 
 # --- Logging ---
@@ -43,8 +44,8 @@ logging.basicConfig(
 
 # --- Metadatos del bot ---
 
-BOT_VERSION = "1.0.5"
-FECHA_ULTIMA_ACTUALIZACION = "2025-08-05"
+BOT_VERSION = "1.1.0"
+FECHA_ULTIMA_ACTUALIZACION = "2025-08-12"
 
 # --- Comandos base ---
 
@@ -59,14 +60,13 @@ application = ApplicationBuilder().token(TOKEN).build()
 async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if update.message and update.message.text:
-            if update.message.chat.type not in ["group", "supergroup"]:
-                return
             comando = update.message.text[1:].lower()
             mensaje = todos_los_comandos.get(comando)
             if mensaje:
                 await update.message.reply_text(mensaje, parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
         logging.error(f"Error en responder: {e}")
+
 
 #HEADLER ID
 
@@ -224,59 +224,32 @@ def generar_botones_documentos(respuestas_legales):
 categorias_legales_transito = {
 
     "📄 Documentación": [
-        "placa", "revision", "seguro", "permiso", "homologacion"
+        "placa", "revision", "seguro", "permiso", "homologacion", "licencia"
     ],
 
     "🅿️ Estacionamiento": [
-    "acera", "pasopeatonal", "platabanda", "bandejon", "areaverde",
+    "acera", "pasopeatonal", "platabanda", "bandejon",
     "ciclovia", "grifo", "esquina", "porton", "prohibido",
-    "cruce", "abandono", "discapacitados"
+    "cruce", "abandono", "discapacitados","paradalocomocion", "senales", "recintosmilitares"
     ],
 
-    "🛞 Neumáticos": [
-        "neumaticos"
-    ],
     "🧰 Equipamiento obligatorio": [
-        "vidrios_polarizados", "objetos_en_vidrios", "limpiaparabrisas", "espejos_retrovisores",
-        "velocimetro", "parachoques", "extintor", "elementos_emergencia", "rueda_repuesto",
-        "botiquin_cunas", "cinturon_seguridad"
-    ],
-    "🐾 Transporte de animales": [
-        "animal_delantero", "animal_sin_arnes"
+        "vidrios_polarizados", "extintor", "grabado_patente" 
     ],
     "↩️ Maniobras": [
-        "marcha_atras", "marcha_atras_cruce", "contra_sentido", "viraje_indebido", "virar_sin_preferencia",
-        "virar_interseccion", "viraru", "virar_menos_200m", "no_senalizar_viraje", "virar_izquierda_sin_ceder"
+        "contra_sentido", "viraru", "viraje_indebido"
     ],
-    "🚗 Adelantamientos": [
-        "adelantar_sin_espacio", "adelantamiento_indebido", "adelantamiento_tunel",
-        "adelantamiento_eje_izquierdo", "adelantamiento_cruce_peatonal"
-    ],
-    "📏 Distancia y eje de calzada": [
-        "distancia_prudente", "sobrepasar_eje"
-    ],
+    
     "🚫 Vías exclusivas": [
         "vias_exclusivas"
     ],
-    "🏍️ Bicicletas y motocicletas": [
-        "moto_mas_dos", "moto_tomarse_vehiculo", "moto_noche_posicion", "moto_carga_manos"
-    ],
-    "🐴 Vehículos de tracción animal": [
-        "vehiculo_animal"
-    ],
     "🛑 Señales de tránsito": [
-        "pare_no_detenerse", "ceda_el_paso", "derecho_preferente"
+        "pare_no_detenerse", "ceda_el_paso", "luz_roja"
     ],
-    "🚨 Vehículos de emergencia": [
-        "no_ceder_emergencia", "facultades_emergencia", "emergencia_situacion_prohibida", "emergencia_senal_audible"
-    ],
-
-    "💦 Agua en calzada": [
-        "mojar_acera"
-    ],
-    "📦 Otras infracciones": [
-        
-    ]
+    "🧷 Usos obligatorios": [
+        "cinturon_seguridad", "lentes"
+],
+   
 }
 
 # Handler principal
@@ -607,40 +580,6 @@ async def mostrar_documentos(update: Update, context: ContextTypes.DEFAULT_TYPE)
         parse_mode=ParseMode.MARKDOWN
     )
 
-#HEADLER CORRECION ORTOGRAFICA GLOBAL
-
-COMANDOS_VALIDOS = [
-    # Comandos principales
-    "id", "ayuda", "estado", "debug", "version", "menu", "anunciar_prueba",
-    "leyes", "buscar", "tema", "cuadrantes", "estacionar", "documentos",
-
-    # Comandos legales
-    "placa", "revision", "seguro", "permiso", "homologacion", "neumaticos",
-    "vidrios_polarizados", "objetos_en_vidrios", "limpiaparabrisas", "espejos_retrovisores",
-    "velocimetro", "parachoques", "extintor", "elementos_emergencia", "rueda_repuesto",
-    "botiquin_cunas", "cinturon_seguridad", "animal_delantero", "animal_sin_arnes",
-    "marcha_atras", "marcha_atras_cruce", "contra_sentido", "velocidad_minima",
-    "mojar_acera", "sobrepasar_eje", "adelantar_sin_espacio", "adelantamiento_indebido",
-    "adelantamiento_tunel", "adelantamiento_eje_izquierdo", "adelantamiento_cruce_peatonal",
-    "distancia_prudente", "vias_exclusivas", "moto_mas_dos", "moto_tomarse_vehiculo",
-    "moto_noche_posicion", "moto_carga_manos", "vehiculo_animal", "virar_sin_preferencia",
-    "virar_interseccion", "viraru", "viraje_indebido", "virar_menos_200m",
-    "no_senalizar_viraje", "virar_izquierda_sin_ceder", "pare_no_detenerse",
-    "ceda_el_paso", "derecho_preferente", "no_ceder_emergencia", "facultades_emergencia",
-    "emergencia_situacion_prohibida", "emergencia_senal_audible", "discapacitados",
-
-    # Comandos legales adicionales (estacionamiento)
-    "prohibido", "acera", "pasopeatonal", "platabanda", "bandejon", "cruce",
-    "ciclovia", "grifo", "cruceferroviario", "esquina", "paradalocomocion",
-    "puertaspublicas", "garajes", "senales", "recintosmilitares", "abandono",
-
-    # Comandos medioambientales
-    "residuo", "escombros", "vertederos", "basura", "contaminacion_vias", "rayados",
-    "afiches", "suelo", "animales", "transporte_desechos", "arbolado",
-    "residuospeligrosos", "lavado", "agua", "calefaccion", "ruidos"
-]
-
-
 # --- Registrar handlers de comandos ---
 application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, bienvenida_nuevo_miembro))
 application.add_handler(CommandHandler("id", obtener_id))
@@ -650,6 +589,7 @@ application.add_handler(CommandHandler("debug", debug))
 application.add_handler(CommandHandler("version", version))
 application.add_handler(CommandHandler("menu", menu))
 application.add_handler(CommandHandler("anunciar_prueba", anunciar_prueba))
+application.add_handler(CommandHandler("prueba", avisar_prueba_comandos))
 application.add_handler(CommandHandler("leyes", leyes))
 application.add_handler(CommandHandler("buscar", buscar_definicion))
 application.add_handler(CommandHandler("tema", mostrar_tema))
